@@ -1,16 +1,22 @@
 import { useMemo, useState } from 'react';
+import { MESSAGES } from '../../constants/messages';
 import { toast } from 'react-toastify';
 import { adminApi } from '../../api/admin';
 import AdminTable from '../../components/admin/AdminTable';
+import ConfirmDialog from '../../components/admin/ConfirmDialog';
 import SeatLayoutEditor from '../../components/admin/SeatLayoutEditor';
 import AdminLayout from '../../layouts/AdminLayout';
 import { useAdminListing } from './CinemasPage';
+
+const emptyForm = { id: null, screen_id: '', row_label: 'A', number: '1' };
 
 export default function SeatsPage() {
     const listing = useAdminListing('seats', { search: '', page: 1, cinema_id: '', screen_id: '' });
     const [saving, setSaving] = useState(false);
     const [formError, setFormError] = useState('');
-    const [form, setForm] = useState({ id: null, screen_id: '', row_label: 'A', number: '1' });
+    const [form, setForm] = useState(emptyForm);
+    const [pending, setPending] = useState(null);
+    const [busy, setBusy] = useState(false);
     const access = listing.payload?.access || {};
     const screens = listing.payload?.screens || [];
     const editor = listing.payload?.editor;
@@ -30,13 +36,30 @@ export default function SeatsPage() {
             } else {
                 await adminApi.create('seats', body);
             }
-            toast.success(form.id ? 'The seat record was updated.' : 'The seat was added to this screen.');
-            setForm({ id: null, screen_id: '', row_label: 'A', number: '1' });
+            toast.success(form.id ? MESSAGES.seatSaved : MESSAGES.seatAdded);
+            setForm(emptyForm);
             listing.load();
         } catch (failure) {
             setFormError(failure.message || 'The seat could not be saved.');
         } finally {
             setSaving(false);
+        }
+    };
+
+    const remove = async () => {
+        setBusy(true);
+        try {
+            const result = await adminApi.remove(`seats/${pending.id}`);
+            toast.success(result.message);
+            if (form.id === pending.id) {
+                setForm(emptyForm);
+            }
+            setPending(null);
+            listing.load();
+        } catch (failure) {
+            toast.error(failure.message || MESSAGES.seatRemoveFailed);
+        } finally {
+            setBusy(false);
         }
     };
 
@@ -63,7 +86,14 @@ export default function SeatsPage() {
                             </select>
                             <input required maxLength={8} value={form.row_label} onChange={(event) => setForm({ ...form, row_label: event.target.value })} className="admin-btn-secondary" aria-label="Row" />
                             <input required type="number" min="1" max="100" value={form.number} onChange={(event) => setForm({ ...form, number: event.target.value })} className="admin-btn-secondary" aria-label="Number" />
-                            <button type="submit" disabled={saving} className="admin-btn">Save seat</button>
+                            <div className="flex flex-wrap gap-2">
+                                <button type="submit" disabled={saving} className="admin-btn">Save seat</button>
+                                {form.id && (
+                                    <button type="button" className="admin-btn-secondary" onClick={() => { setForm(emptyForm); setFormError(''); }}>
+                                        Cancel
+                                    </button>
+                                )}
+                            </div>
                         </div>
                     </form>
                 )}
@@ -89,11 +119,24 @@ export default function SeatsPage() {
                         key: 'actions',
                         label: '',
                         render: (row) => access.update && !row.booked ? (
-                            <button type="button" className="admin-link" onClick={() => setForm({ id: row.id, screen_id: String(row.screen_id), row_label: row.row_label, number: String(row.number) })}>Edit</button>
+                            <span className="flex gap-3">
+                                <button type="button" className="admin-link" onClick={() => setForm({ id: row.id, screen_id: String(row.screen_id), row_label: row.row_label, number: String(row.number) })}>Edit</button>
+                                {row.deletable && <button type="button" className="admin-link-danger" onClick={() => setPending(row)}>Delete</button>}
+                            </span>
                         ) : null,
                     },
                 ]}
             />
+            {pending && (
+                <ConfirmDialog
+                    title="Delete seat"
+                    message={`${pending.label} will be permanently deleted. Seats on bookings cannot be removed.`}
+                    confirmLabel="Delete"
+                    busy={busy}
+                    onClose={() => setPending(null)}
+                    onConfirm={remove}
+                />
+            )}
         </AdminLayout>
     );
 }

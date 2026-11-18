@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { MESSAGES } from '../../constants/messages';
+import { Link, useNavigate, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { adminApi } from '../../api/admin';
 import AdminLayout from '../../layouts/AdminLayout';
@@ -24,7 +25,7 @@ export default function RoleFormPage() {
                     setSelected(payload.data.permissions || []);
                 }
             })
-            .catch((failure) => setError(failure.message || 'The role could not be loaded.'))
+            .catch((failure) => setError(failure.message || MESSAGES.roleLoadFailed))
             .finally(() => setLoading(false));
     }, [id]);
 
@@ -35,7 +36,7 @@ export default function RoleFormPage() {
     const save = async (event) => {
         event.preventDefault();
         if (selected.length === 0) {
-            setError('Please check at least one module.');
+            setError(MESSAGES.roleNeedsModule);
             return;
         }
         setSaving(true);
@@ -44,14 +45,14 @@ export default function RoleFormPage() {
         try {
             if (id) {
                 await adminApi.update(`roles/${id}`, body);
-                toast.success('The role and its permissions were saved.');
+                toast.success(MESSAGES.roleSaved);
             } else {
                 await adminApi.create('roles', body);
-                toast.success('The role and its permissions were added.');
+                toast.success(MESSAGES.roleAdded);
             }
             navigate('/admin/roles');
         } catch (failure) {
-            setError(failure.message || 'The role could not be saved.');
+            setError(failure.message || MESSAGES.roleSaveFailed);
         } finally {
             setSaving(false);
         }
@@ -76,7 +77,10 @@ export default function RoleFormPage() {
                             </label>
                         ))}
                     </div>
-                    <button type="submit" disabled={saving} className="admin-btn">{saving ? 'Saving…' : 'Save role'}</button>
+                    <div className="flex flex-wrap gap-2">
+                        <button type="submit" disabled={saving} className="admin-btn">{saving ? 'Saving…' : 'Save role'}</button>
+                        <Link to="/admin/roles" className="admin-btn-secondary">Cancel</Link>
+                    </div>
                 </form>
             )}
         </AdminLayout>

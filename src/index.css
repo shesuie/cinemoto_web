@@ -26,7 +26,7 @@
     }
 
     .cinema-stepper {
-        @apply flex h-8 w-8 items-center justify-center rounded-md border border-navy-mid/20 bg-white text-sm font-bold text-ink transition duration-200 hover:-translate-y-0.5 hover:border-brand hover:bg-brand/10 hover:text-brand active:translate-y-0 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand;
+        @apply flex h-8 w-8 items-center justify-center rounded-md border border-white/20 bg-white/5 text-sm font-bold text-mist transition duration-200 hover:-translate-y-0.5 hover:border-brand hover:bg-brand/20 hover:text-brand active:translate-y-0 active:scale-95 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand;
     }
 
     .cinema-field {

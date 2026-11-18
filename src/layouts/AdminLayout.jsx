@@ -1,8 +1,11 @@
-import { useEffect, useState } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { createContext, useContext, useEffect, useLayoutEffect, useState } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { adminApi } from '../api/admin';
+import BrandMark from '../components/ui/BrandMark';
+import useSiteBranding from '../hooks/useSiteBranding';
 import { useAuthStore } from '../stores/authStore';
-import { mediaUrl } from '../utils/format';
+
+const AdminHeaderContext = createContext(null);
 
 const icons = {
     '/admin/dashboard': 'M3 12l9-8 9 8v8H3z',
@@ -20,9 +23,12 @@ const icons = {
     '/admin/customers': 'M8 8a4 4 0 118 0 4 4 0 01-8 0zM4 19c1.5-3 4-4 8-4s6.5 1 8 4',
     '/admin/users': 'M8 8a4 4 0 118 0 4 4 0 01-8 0zM4 19c1.5-3 4-4 8-4s6.5 1 8 4',
     '/admin/roles': 'M12 3l7 3v6c0 5-3 7-7 9-4-2-7-4-7-9V6z',
+    '/admin/audit-logs': 'M5 4h14v16H5zM8 8h8M8 12h8M8 16h5',
     '/account': 'M12 12a4 4 0 100-8 4 4 0 000 8zM4 20c1.5-3 4-4 8-4s6.5 1 8 4',
     '/admin/settings': 'M12 8a4 4 0 100 8 4 4 0 000-8z',
 };
+
+const logoutIcon = 'M15 3h4a2 2 0 012 2v14a2 2 0 01-2 2h-4M10 17l5-5-5-5M15 12H3';
 
 function isActive(href, path) {
     if (path === href) {
@@ -42,12 +48,15 @@ function Icon({ href }) {
     );
 }
 
-export default function AdminLayout({ header, children }) {
+/** Persistent admin chrome. Mount once via the /admin route tree. */
+export function AdminShell() {
     const location = useLocation();
     const navigate = useNavigate();
+    const branding = useSiteBranding();
     const user = useAuthStore((state) => state.user);
     const logout = useAuthStore((state) => state.logout);
     const path = location.pathname;
+    const [header, setHeader] = useState('');
     const [menuOpen, setMenuOpen] = useState(false);
     const [navigation, setNavigation] = useState([]);
     const [navError, setNavError] = useState('');
@@ -71,6 +80,10 @@ export default function AdminLayout({ header, children }) {
         };
     }, []);
 
+    useEffect(() => {
+        setMenuOpen(false);
+    }, [path]);
+
     const signOut = async () => {
         await logout();
         navigate('/login');
@@ -79,13 +92,16 @@ export default function AdminLayout({ header, children }) {
     const sidebar = (
         <div className="flex h-full min-h-0 flex-col">
             <Link to="/admin/dashboard" className="flex shrink-0 items-center gap-3 border-b border-white/10 px-5 py-5" onClick={() => setMenuOpen(false)}>
-                <img src={mediaUrl('/images/film-reel.png')} alt="" className="h-9 w-9" />
-                <span>
-                    <span className="block text-sm font-semibold tracking-[0.18em] text-white">CINE<span className="text-[#c084fc]">MO&apos;TO</span></span>
-                    <span className="text-xs text-[#9aa6bd]">Cinema management</span>
+                <span className="min-w-0">
+                    <BrandMark
+                        name={branding.name}
+                        font={branding.font}
+                        logoUrl={branding.logo_url}
+                    />
+                    <span className="mt-1 block text-xs text-[#9aa6bd]">Cinema management</span>
                 </span>
             </Link>
-            <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4">
+            <nav className="min-h-0 flex-1 space-y-4 overflow-y-auto px-3 py-4 [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                 {navError && <p className="px-3 text-xs text-red-200">{navError}</p>}
                 {navigation.map((group) => (
                     <div key={group.label}>
@@ -112,6 +128,9 @@ export default function AdminLayout({ header, children }) {
             </nav>
             <div className="shrink-0 border-t border-white/10 px-3 py-3">
                 <button type="button" className="flex h-9 w-full items-center gap-3 rounded-lg px-3 text-sm text-[#d5dbe6] transition duration-200 hover:bg-white/10 hover:text-white" onClick={signOut}>
+                    <svg className="h-4 w-4 shrink-0" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" aria-hidden="true">
+                        <path d={logoutIcon} />
+                    </svg>
                     Log Out
                 </button>
             </div>
@@ -119,26 +138,45 @@ export default function AdminLayout({ header, children }) {
     );
 
     return (
-        <div className="flex h-screen overflow-hidden bg-[#eef2f7] font-sans text-gray-900">
-            <aside className="hidden h-screen w-72 shrink-0 bg-[#1A2130] lg:block">{sidebar}</aside>
-            {menuOpen && (
-                <div className="fixed inset-0 z-40 lg:hidden">
-                    <button type="button" className="absolute inset-0 bg-black/50" aria-label="Close menu" onClick={() => setMenuOpen(false)} />
-                    <aside className="relative h-full w-72 max-w-[85vw] bg-[#1A2130]">{sidebar}</aside>
-                </div>
-            )}
-            <div className="flex min-w-0 flex-1 flex-col">
-                <header className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6">
-                    <div className="flex min-w-0 items-center gap-3">
-                        <button type="button" className="rounded-lg p-2 text-[#1A2130] hover:bg-gray-100 lg:hidden" onClick={() => setMenuOpen(true)} aria-label="Open menu">
-                            <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M3 5h14v2H3V5zm0 4h14v2H3V9zm0 4h14v2H3v-2z" /></svg>
-                        </button>
-                        <div className="truncate text-lg font-semibold text-[#1A2130]">{header}</div>
+        <AdminHeaderContext.Provider value={setHeader}>
+            <div className="flex h-screen overflow-hidden bg-[#eef2f7] font-sans text-gray-900">
+                <aside className="hidden h-screen w-72 shrink-0 bg-[#1A2130] lg:block">{sidebar}</aside>
+                {menuOpen && (
+                    <div className="fixed inset-0 z-40 lg:hidden">
+                        <button type="button" className="absolute inset-0 bg-black/50" aria-label="Close menu" onClick={() => setMenuOpen(false)} />
+                        <aside className="relative h-full w-72 max-w-[85vw] bg-[#1A2130]">{sidebar}</aside>
                     </div>
-                    <Link to="/account" className="max-w-[14rem] truncate text-[15px] font-medium text-[#1A2130]">{user?.name}</Link>
-                </header>
-                <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">{children}</main>
+                )}
+                <div className="flex min-w-0 flex-1 flex-col">
+                    <header className="flex h-16 shrink-0 items-center justify-between border-b border-gray-200 bg-white px-4 sm:px-6">
+                        <div className="flex min-w-0 items-center gap-3">
+                            <button type="button" className="rounded-lg p-2 text-[#1A2130] hover:bg-gray-100 lg:hidden" onClick={() => setMenuOpen(true)} aria-label="Open menu">
+                                <svg className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M3 5h14v2H3V5zm0 4h14v2H3V9zm0 4h14v2H3v-2z" /></svg>
+                            </button>
+                            <div className="truncate text-lg font-semibold text-[#1A2130]">{header}</div>
+                        </div>
+                        <Link to="/account" className="max-w-[14rem] truncate text-[15px] font-medium text-[#1A2130]">{user?.name}</Link>
+                    </header>
+                    <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6">
+                        <Outlet />
+                    </main>
+                </div>
             </div>
-        </div>
+        </AdminHeaderContext.Provider>
     );
+}
+
+/** Page helper: sets the shell header without remounting the sidebar. */
+export default function AdminLayout({ header, children }) {
+    const setHeader = useContext(AdminHeaderContext);
+
+    useLayoutEffect(() => {
+        if (!setHeader) {
+            return undefined;
+        }
+        setHeader(header || '');
+        return () => setHeader('');
+    }, [header, setHeader]);
+
+    return children;
 }

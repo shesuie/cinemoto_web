@@ -1,9 +1,12 @@
 import api from './client';
 
+let mePending = null;
+
 export const authApi = {
     async login(payload) {
         try {
             const response = await api.post('/api/v1/auth/login', payload);
+            mePending = null;
 
             return { user: response.data.data };
         } catch (error) {
@@ -17,17 +20,27 @@ export const authApi = {
 
     async twoFactor(code) {
         const response = await api.post('/api/v1/auth/two-factor', { code });
+        mePending = null;
 
         return response.data.data;
     },
 
     async me() {
-        const response = await api.get('/api/v1/auth/me');
+        if (mePending) {
+            return mePending;
+        }
 
-        return response.data.data;
+        mePending = api.get('/api/v1/auth/me')
+            .then((response) => response.data.data)
+            .finally(() => {
+                mePending = null;
+            });
+
+        return mePending;
     },
 
     async logout() {
+        mePending = null;
         await api.post('/api/v1/auth/logout');
     },
 

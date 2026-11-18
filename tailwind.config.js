@@ -40,6 +40,8 @@ export default {
                 display: ['Poppins', ...defaultTheme.fontFamily.sans],
                 sans: ['Poppins', ...defaultTheme.fontFamily.sans],
                 script: ['Caveat', 'cursive', ...defaultTheme.fontFamily.sans],
+                rounded: ['Nunito', ...defaultTheme.fontFamily.sans],
+                'serif-display': ['Libre Baskerville', ...defaultTheme.fontFamily.serif],
             },
             borderRadius: {
                 lg: '0.5rem',

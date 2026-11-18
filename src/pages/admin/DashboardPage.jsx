@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { MESSAGES } from '../../constants/messages';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { adminApi } from '../../api/admin';
+import { DonutChart, RankedBarChart, TrendChart } from '../../components/admin/DashboardCharts';
 import AdminLayout from '../../layouts/AdminLayout';
-import { pesos } from '../../utils/format';
 
 const monthOptions = [
     { value: '', label: 'All months' },
@@ -27,39 +28,6 @@ const kpiTone = {
     indigo: 'border-indigo-200 bg-indigo-50 text-indigo-800',
     amber: 'border-amber-200 bg-amber-50 text-amber-900',
 };
-
-function Bars({ items, empty, money = false }) {
-    if (!items?.length) {
-        return <p className="py-8 text-center text-sm text-gray-500">{empty}</p>;
-    }
-
-    const max = Math.max(...items.map((item) => item.value), 1);
-
-    return (
-        <div className="space-y-3">
-            {items.map((item) => (
-                <div key={`${item.label}-${item.value}`}>
-                    <div className="mb-1 flex justify-between gap-3 text-sm">
-                        <span className="truncate text-[#1A2130]">
-                            {item.href ? <Link className="admin-link" to={item.href}>{item.label}</Link> : item.label}
-                        </span>
-                        <span className="shrink-0 tabular-nums text-gray-500">
-                            {money && item.value_cents != null
-                                ? `${item.value} · ${pesos(item.value_cents)}`
-                                : item.value}
-                        </span>
-                    </div>
-                    <div className="h-2 rounded-full bg-gray-100">
-                        <div
-                            className="h-2 rounded-full bg-[#3FA2F6]"
-                            style={{ width: `${Math.max(4, (item.value / max) * 100)}%` }}
-                        />
-                    </div>
-                </div>
-            ))}
-        </div>
-    );
-}
 
 function currentYear() {
     return new Date().getFullYear();
@@ -140,15 +108,15 @@ export default function DashboardPage() {
     }, [params]);
 
     const dayCount = daysInMonth(year, month);
-    const lockedBranch = Boolean(report?.branch && report?.cinemas?.length === 1);
+    const lockedBranch = Boolean(report?.branch_locked || (report?.branch && report?.cinemas?.length === 1));
 
     const downloadCsv = async () => {
         setExporting(true);
         try {
             await adminApi.dashboardExport(params);
-            toast.success('CSV report downloaded.');
+            toast.success(MESSAGES.dashboardExportOk);
         } catch (failure) {
-            toast.error(failure.message || 'The CSV report could not be downloaded.');
+            toast.error(failure.message || MESSAGES.dashboardExportFailed);
         } finally {
             setExporting(false);
         }
@@ -166,11 +134,13 @@ export default function DashboardPage() {
                                 {report?.branch ? ` · ${report.branch.name}` : cinemaId ? '' : ' · All branches'}
                             </h2>
                             <p className="mt-1 max-w-3xl text-sm text-gray-600">
-                                Filter by cinema branch and a specific year, month, or day, then download a CSV of bookings, ticket references, seats, and food orders.
+                                {lockedBranch
+                                    ? `Reports are limited to ${report?.branch?.name || 'your assigned branch'}. Ticket and food totals are test payment amounts and are not collected revenue.`
+                                    : 'Filter by cinema branch and date, then download an Excel report of bookings, ticket references, seats, food orders, and check-ins. Ticket and food totals are test payment amounts and are not collected revenue.'}
                             </p>
                         </div>
                         <button type="button" className="admin-btn shrink-0" disabled={exporting || loading} onClick={downloadCsv}>
-                            {exporting ? 'Preparing CSV…' : 'Download CSV report'}
+                            {exporting ? 'Preparing report…' : 'Download Excel report'}
                         </button>
                     </div>
 
@@ -251,7 +221,7 @@ export default function DashboardPage() {
                 {loading && <p className="text-sm text-gray-500">Loading the dashboard…</p>}
 
                 {!loading && (report?.kpis?.length > 0) && (
-                    <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+                    <section className={`grid gap-3 sm:grid-cols-2 ${report.kpis.length > 4 ? 'xl:grid-cols-5' : 'xl:grid-cols-4'}`}>
                         {report.kpis.map((kpi) => (
                             <article key={kpi.label} className={`rounded-2xl border p-5 shadow-sm ${kpiTone[kpi.tone] || 'border-gray-200 bg-white text-[#1A2130]'}`}>
                                 <p className="text-xs font-semibold uppercase tracking-wide opacity-80">{kpi.label}</p>
@@ -280,30 +250,40 @@ export default function DashboardPage() {
                     <div className="grid gap-4 xl:grid-cols-2">
                         {report.show_bookings && (
                             <>
-                                <section className="rounded-2xl bg-white p-5 shadow-sm">
+                                <section className="rounded-2xl bg-white p-5 shadow-sm xl:col-span-2">
                                     <h3 className="mb-1 font-semibold text-[#1A2130]">Booking trends</h3>
                                     <p className="mb-4 text-xs text-gray-500">Daily booking volume in the selected period.</p>
-                                    <Bars items={report.trend || []} empty="No bookings in this range." />
+                                    <TrendChart items={report.trend || []} empty="No bookings in this range." />
                                 </section>
                                 <section className="rounded-2xl bg-white p-5 shadow-sm">
                                     <h3 className="mb-1 font-semibold text-[#1A2130]">Booking status</h3>
                                     <p className="mb-4 text-xs text-gray-500">Pending, confirmed, cancelled, and expired holds.</p>
-                                    <Bars items={report.statuses || []} empty="No bookings in this range." />
+                                    <DonutChart items={report.statuses || []} empty="No bookings in this range." />
+                                </section>
+                                <section className="rounded-2xl bg-white p-5 shadow-sm">
+                                    <h3 className="mb-1 font-semibold text-[#1A2130]">Ticket check-ins</h3>
+                                    <p className="mb-4 text-xs text-gray-500">Checked-in tickets versus confirmed tickets still awaiting check-in.</p>
+                                    <DonutChart items={report.check_ins || []} empty="No ticket check-ins in this range." />
+                                </section>
+                                <section className="rounded-2xl bg-white p-5 shadow-sm">
+                                    <h3 className="mb-1 font-semibold text-[#1A2130]">Check-in trends</h3>
+                                    <p className="mb-4 text-xs text-gray-500">Daily check-in volume in the selected period.</p>
+                                    <TrendChart items={report.check_in_trend || []} empty="No ticket check-ins in this range." />
                                 </section>
                                 <section className="rounded-2xl bg-white p-5 shadow-sm">
                                     <h3 className="mb-1 font-semibold text-[#1A2130]">Popular movies</h3>
                                     <p className="mb-4 text-xs text-gray-500">Top movies by bookings.</p>
-                                    <Bars items={report.movies_booked || []} empty="No movie bookings in this range." />
+                                    <RankedBarChart items={report.movies_booked || []} empty="No movie bookings in this range." />
                                 </section>
                                 <section className="rounded-2xl bg-white p-5 shadow-sm">
                                     <h3 className="mb-1 font-semibold text-[#1A2130]">Cinema branch performance</h3>
                                     <p className="mb-4 text-xs text-gray-500">Bookings and ticket value by branch.</p>
-                                    <Bars items={report.branches || []} empty="No branch bookings in this range." money />
+                                    <RankedBarChart items={report.branches || []} empty="No branch bookings in this range." money color="#10b981" />
                                 </section>
                                 <section className="rounded-2xl bg-white p-5 shadow-sm">
                                     <h3 className="mb-1 font-semibold text-[#1A2130]">Tickets by movie</h3>
                                     <p className="mb-4 text-xs text-gray-500">Confirmed seat counts by movie title.</p>
-                                    <Bars items={report.seats_by_movie || []} empty="No seats were booked in this range." />
+                                    <RankedBarChart items={report.seats_by_movie || []} empty="No seats were booked in this range." color="#8b5cf6" />
                                 </section>
                             </>
                         )}
@@ -312,12 +292,12 @@ export default function DashboardPage() {
                                 <section className="rounded-2xl bg-white p-5 shadow-sm">
                                     <h3 className="mb-1 font-semibold text-[#1A2130]">Food & drinks sales</h3>
                                     <p className="mb-4 text-xs text-gray-500">Popular snack items ordered with bookings.</p>
-                                    <Bars items={report.food || []} empty="No food items were ordered in this range." money />
+                                    <RankedBarChart items={report.food || []} empty="No food items were ordered in this range." money color="#f59e0b" />
                                 </section>
                                 <section className="rounded-2xl bg-white p-5 shadow-sm">
                                     <h3 className="mb-1 font-semibold text-[#1A2130]">Order payment status</h3>
                                     <p className="mb-4 text-xs text-gray-500">Paid vs unpaid food orders.</p>
-                                    <Bars items={report.payments || []} empty="No orders in this range." money />
+                                    <DonutChart items={report.payments || []} empty="No orders in this range." />
                                 </section>
                             </>
                         )}

@@ -46,13 +46,32 @@ export function draftReadyFor(stepId, draft, movieId) {
         case 'seats':
             return Boolean(draft.cinemaId && draft.showtimeId && draft.date);
         case 'food':
-            return Boolean(draft.showtimeId && draft.seatIds?.length && draft.phone);
+            return Boolean(draft.showtimeId && draft.seatIds?.length);
         case 'review':
-            return Boolean(draft.showtimeId && draft.seatIds?.length && draft.phone);
+            return Boolean(draft.showtimeId && draft.seatIds?.length);
         case 'payment':
         case 'confirmation':
             return Boolean(draft.bookingId);
         default:
             return false;
     }
+}
+
+/** Furthest step the shopper can open from the saved draft (skips payment/done). */
+export function resumeStepId(draft, movieId) {
+    const order = ['review', 'food', 'seats', 'schedule', 'cinema'];
+
+    for (const stepId of order) {
+        if (draftReadyFor(stepId, draft, movieId)) {
+            return stepId;
+        }
+    }
+
+    return 'movie';
+}
+
+export function stepPath(stepId, movieId, bookingId = null) {
+    const step = BOOKING_STEPS.find((row) => row.id === stepId);
+
+    return step ? step.path(movieId, bookingId) : `/movies/${movieId}`;
 }

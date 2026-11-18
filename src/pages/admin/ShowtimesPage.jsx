@@ -1,7 +1,9 @@
 import { useMemo, useState } from 'react';
+import { MESSAGES } from '../../constants/messages';
 import { toast } from 'react-toastify';
 import { adminApi } from '../../api/admin';
 import AdminTable from '../../components/admin/AdminTable';
+import StatusBadge from '../../components/admin/StatusBadge';
 import { SHOWTIME_STATUS_CANCELLED, SHOWTIME_STATUSES } from '../../constants/domain';
 import AdminLayout from '../../layouts/AdminLayout';
 import { pesos } from '../../utils/format';
@@ -68,7 +70,7 @@ export default function ShowtimesPage() {
             } else {
                 await adminApi.create('showtimes', body);
             }
-            toast.success(form.id ? 'The screening details were saved.' : 'The screening was added.');
+            toast.success(form.id ? MESSAGES.showtimeSaved : MESSAGES.showtimeAdded);
             setForm(empty);
             listing.load();
         } catch (failure) {
@@ -87,14 +89,14 @@ export default function ShowtimesPage() {
             toast.success(result.message);
             listing.load();
         } catch (failure) {
-            toast.error(failure.message || 'The screening could not be cancelled.');
+            toast.error(failure.message || MESSAGES.showtimeCancelFailed);
         }
     };
 
     return (
         <AdminLayout header="Showtimes">
             <p className="mb-4 rounded-lg border border-[#d7deea] bg-white px-4 py-3 text-sm text-[#304463]">
-                Add one screening per clock time. Example: for the same movie/date with 9:00 AM, 1:00 PM, and 7:00 PM, create three showtimes on that date. Customers pick the date first, then one of those times.
+                Schedule screenings across movies and branches here. You can also assign branch times while editing a movie. Add one screening per clock time — customers pick the date first, then one of those times.
             </p>
             {(access.create || form.id) && (
                 <form onSubmit={save} className="mb-4 grid gap-3 rounded-lg bg-white p-4 shadow-sm md:grid-cols-3">
@@ -136,7 +138,7 @@ export default function ShowtimesPage() {
                     { key: 'screen', label: 'Screen' },
                     { key: 'starts_at', label: 'Starts' },
                     { key: 'price_cents', label: 'Price', render: (row) => pesos(row.price_cents) },
-                    { key: 'status', label: 'Status' },
+                    { key: 'status', label: 'Status', render: (row) => <StatusBadge value={row.status} /> },
                     {
                         key: 'actions',
                         label: '',

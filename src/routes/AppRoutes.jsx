@@ -6,21 +6,23 @@ function LegacyFoodRedirect() {
     return <Navigate to={`/movies/${id}/book/food`} replace />;
 }
 import GuestLayout from '../layouts/GuestLayout';
-import AccountPage from '../pages/AccountPage';
+import { AdminShell } from '../layouts/AdminLayout';
+import AccountPage from '../pages/account/AccountPage';
 import CinemasPage from '../pages/admin/CinemasPage';
-import AdminBookingPage from '../pages/admin/AdminBookingPage';
-import AdminBookingsPage from '../pages/admin/AdminBookingsPage';
-import AdminOrderPage from '../pages/admin/AdminOrderPage';
-import AdminOrdersPage from '../pages/admin/AdminOrdersPage';
-import AdministratorsPage from '../pages/admin/AdministratorsPage';
+import AdminBookingDetailsPage from '../pages/admin/BookingDetailsPage';
+import AdminBookingsListPage from '../pages/admin/BookingsPage';
+import OrderDetailsPage from '../pages/admin/OrderDetailsPage';
+import OrdersPage from '../pages/admin/OrdersPage';
+import UsersPage from '../pages/admin/UsersPage';
+import AuditLogsPage from '../pages/admin/AuditLogsPage';
 import CustomersPage from '../pages/admin/CustomersPage';
 import DashboardPage from '../pages/admin/DashboardPage';
-import ManagedUserPage from '../pages/admin/ManagedUserPage';
+import UserDetailsPage from '../pages/admin/UserDetailsPage';
 import RoleFormPage from '../pages/admin/RoleFormPage';
 import RolesPage from '../pages/admin/RolesPage';
 import SettingsPage from '../pages/admin/SettingsPage';
 import FoodCategoriesPage from '../pages/admin/FoodCategoriesPage';
-import FoodFormPage from '../pages/admin/FoodFormPage';
+import FoodProductFormPage from '../pages/admin/FoodProductFormPage';
 import FoodProductsPage from '../pages/admin/FoodProductsPage';
 import GenresPage from '../pages/admin/GenresPage';
 import MovieFormPage from '../pages/admin/MovieFormPage';
@@ -28,25 +30,25 @@ import AdminMoviesPage from '../pages/admin/MoviesPage';
 import ScreensPage from '../pages/admin/ScreensPage';
 import SeatsPage from '../pages/admin/SeatsPage';
 import ShowtimesPage from '../pages/admin/ShowtimesPage';
-import TicketCheckPage from '../pages/admin/TicketCheckPage';
-import BookingPage from '../pages/BookingPage';
-import BookingsPage from '../pages/BookingsPage';
-import BookCinemaPage from '../pages/book/BookCinemaPage';
-import BookFoodPage from '../pages/book/BookFoodPage';
-import BookReviewPage from '../pages/book/BookReviewPage';
-import BookSchedulePage from '../pages/book/BookSchedulePage';
-import BookSeatsPage from '../pages/book/BookSeatsPage';
-import ForgotPasswordPage from '../pages/ForgotPasswordPage';
-import LoginPage from '../pages/LoginPage';
-import MoviePage from '../pages/MoviePage';
-import MoviesPage from '../pages/MoviesPage';
-import PaymentPage from '../pages/PaymentPage';
-import RegisterPage from '../pages/RegisterPage';
-import ResetPasswordPage from '../pages/ResetPasswordPage';
-import SitePage from '../pages/SitePage';
-import TicketPage from '../pages/TicketPage';
-import TwoFactorPage from '../pages/TwoFactorPage';
-import VerifyEmailPage from '../pages/VerifyEmailPage';
+import TicketVerificationPage from '../pages/admin/TicketVerificationPage';
+import BookingDetailsPage from '../pages/account/BookingDetailsPage';
+import BookingsPage from '../pages/account/BookingsPage';
+import CinemaSelectionPage from '../pages/book/CinemaSelectionPage';
+import FoodSelectionPage from '../pages/book/FoodSelectionPage';
+import BookingReviewPage from '../pages/book/BookingReviewPage';
+import ScheduleSelectionPage from '../pages/book/ScheduleSelectionPage';
+import SeatSelectionPage from '../pages/book/SeatSelectionPage';
+import ForgotPasswordPage from '../pages/auth/ForgotPasswordPage';
+import LoginPage from '../pages/auth/LoginPage';
+import MoviePage from '../pages/catalog/MoviePage';
+import MoviesPage from '../pages/catalog/MoviesPage';
+import PaymentPage from '../pages/account/PaymentPage';
+import RegisterPage from '../pages/auth/RegisterPage';
+import ResetPasswordPage from '../pages/auth/ResetPasswordPage';
+import SitePage from '../pages/site/SitePage';
+import TicketPage from '../pages/account/TicketPage';
+import TwoFactorPage from '../pages/auth/TwoFactorPage';
+import VerifyEmailPage from '../pages/auth/VerifyEmailPage';
 import RequireAuth from './RequireAuth';
 import RequireStaff from './RequireStaff';
 
@@ -61,11 +63,11 @@ export default function AppRoutes() {
             <Route path="/contact" element={<SitePage />} />
             <Route path="/terms" element={<SitePage />} />
             <Route path="/movies/:id" element={<MoviePage />} />
-            <Route path="/movies/:id/book/cinema" element={<BookCinemaPage />} />
-            <Route path="/movies/:id/book/schedule" element={<BookSchedulePage />} />
-            <Route path="/movies/:id/book/seats" element={<BookSeatsPage />} />
-            <Route path="/movies/:id/book/food" element={<BookFoodPage />} />
-            <Route path="/movies/:id/book/review" element={<BookReviewPage />} />
+            <Route path="/movies/:id/book/cinema" element={<CinemaSelectionPage />} />
+            <Route path="/movies/:id/book/schedule" element={<ScheduleSelectionPage />} />
+            <Route path="/movies/:id/book/seats" element={<SeatSelectionPage />} />
+            <Route path="/movies/:id/book/food" element={<FoodSelectionPage />} />
+            <Route path="/movies/:id/book/review" element={<BookingReviewPage />} />
             <Route path="/movies/:id/food" element={<LegacyFoodRedirect />} />
             <Route element={<GuestLayout />}>
                 <Route path="/login" element={<LoginPage />} />
@@ -84,36 +86,39 @@ export default function AppRoutes() {
             </Route>
             <Route path="/tickets" element={<RequireAuth><BookingsPage /></RequireAuth>} />
             <Route path="/bookings" element={<RequireAuth><BookingsPage /></RequireAuth>} />
-            <Route path="/bookings/:id" element={<RequireAuth><BookingPage /></RequireAuth>} />
+            <Route path="/bookings/:id" element={<RequireAuth><BookingDetailsPage /></RequireAuth>} />
             <Route path="/bookings/:id/payment" element={<RequireAuth><PaymentPage /></RequireAuth>} />
             <Route path="/bookings/:id/ticket" element={<RequireAuth><TicketPage /></RequireAuth>} />
             <Route path="/account" element={<RequireAuth><AccountPage /></RequireAuth>} />
-            <Route path="/admin/dashboard" element={<RequireStaff><DashboardPage /></RequireStaff>} />
-            <Route path="/admin/cinemas" element={<RequireStaff><CinemasPage /></RequireStaff>} />
-            <Route path="/admin/screens" element={<RequireStaff><ScreensPage /></RequireStaff>} />
-            <Route path="/admin/seats" element={<RequireStaff><SeatsPage /></RequireStaff>} />
-            <Route path="/admin/movies" element={<RequireStaff><AdminMoviesPage /></RequireStaff>} />
-            <Route path="/admin/movies/create" element={<RequireStaff><MovieFormPage /></RequireStaff>} />
-            <Route path="/admin/movies/:id/edit" element={<RequireStaff><MovieFormPage /></RequireStaff>} />
-            <Route path="/admin/genres" element={<RequireStaff><GenresPage /></RequireStaff>} />
-            <Route path="/admin/showtimes" element={<RequireStaff><ShowtimesPage /></RequireStaff>} />
-            <Route path="/admin/food-categories" element={<RequireStaff><FoodCategoriesPage /></RequireStaff>} />
-            <Route path="/admin/food" element={<RequireStaff><FoodProductsPage /></RequireStaff>} />
-            <Route path="/admin/food/create" element={<RequireStaff><FoodFormPage /></RequireStaff>} />
-            <Route path="/admin/food/:id/edit" element={<RequireStaff><FoodFormPage /></RequireStaff>} />
-            <Route path="/admin/tickets/check" element={<RequireStaff><TicketCheckPage /></RequireStaff>} />
-            <Route path="/admin/bookings" element={<RequireStaff><AdminBookingsPage /></RequireStaff>} />
-            <Route path="/admin/bookings/:id" element={<RequireStaff><AdminBookingPage /></RequireStaff>} />
-            <Route path="/admin/orders" element={<RequireStaff><AdminOrdersPage /></RequireStaff>} />
-            <Route path="/admin/orders/:id" element={<RequireStaff><AdminOrderPage /></RequireStaff>} />
-            <Route path="/admin/customers" element={<RequireStaff><CustomersPage /></RequireStaff>} />
-            <Route path="/admin/customers/:id/edit" element={<RequireStaff><ManagedUserPage /></RequireStaff>} />
-            <Route path="/admin/users" element={<RequireStaff><AdministratorsPage /></RequireStaff>} />
-            <Route path="/admin/users/:id/edit" element={<RequireStaff><ManagedUserPage /></RequireStaff>} />
-            <Route path="/admin/roles" element={<RequireStaff><RolesPage /></RequireStaff>} />
-            <Route path="/admin/roles/create" element={<RequireStaff><RoleFormPage /></RequireStaff>} />
-            <Route path="/admin/roles/:id/edit" element={<RequireStaff><RoleFormPage /></RequireStaff>} />
-            <Route path="/admin/settings" element={<RequireStaff><SettingsPage /></RequireStaff>} />
+            <Route element={<RequireStaff><AdminShell /></RequireStaff>}>
+                <Route path="/admin/dashboard" element={<DashboardPage />} />
+                <Route path="/admin/cinemas" element={<CinemasPage />} />
+                <Route path="/admin/screens" element={<ScreensPage />} />
+                <Route path="/admin/seats" element={<SeatsPage />} />
+                <Route path="/admin/movies" element={<AdminMoviesPage />} />
+                <Route path="/admin/movies/create" element={<MovieFormPage />} />
+                <Route path="/admin/movies/:id/edit" element={<MovieFormPage />} />
+                <Route path="/admin/genres" element={<GenresPage />} />
+                <Route path="/admin/showtimes" element={<ShowtimesPage />} />
+                <Route path="/admin/food-categories" element={<FoodCategoriesPage />} />
+                <Route path="/admin/food" element={<FoodProductsPage />} />
+                <Route path="/admin/food/create" element={<FoodProductFormPage />} />
+                <Route path="/admin/food/:id/edit" element={<FoodProductFormPage />} />
+                <Route path="/admin/tickets/check" element={<TicketVerificationPage />} />
+                <Route path="/admin/bookings" element={<AdminBookingsListPage />} />
+                <Route path="/admin/bookings/:id" element={<AdminBookingDetailsPage />} />
+                <Route path="/admin/orders" element={<OrdersPage />} />
+                <Route path="/admin/orders/:id" element={<OrderDetailsPage />} />
+                <Route path="/admin/customers" element={<CustomersPage />} />
+                <Route path="/admin/customers/:id/edit" element={<UserDetailsPage />} />
+                <Route path="/admin/users" element={<UsersPage />} />
+                <Route path="/admin/users/:id/edit" element={<UserDetailsPage />} />
+                <Route path="/admin/roles" element={<RolesPage />} />
+                <Route path="/admin/roles/create" element={<RoleFormPage />} />
+                <Route path="/admin/roles/:id/edit" element={<RoleFormPage />} />
+                <Route path="/admin/audit-logs" element={<AuditLogsPage />} />
+                <Route path="/admin/settings" element={<SettingsPage />} />
+            </Route>
             <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
     );

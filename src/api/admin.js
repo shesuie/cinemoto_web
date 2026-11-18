@@ -12,9 +12,35 @@ function query(params) {
     return text ? `?${text}` : '';
 }
 
+let navigationCached = null;
+let navigationPending = null;
+
 export const adminApi = {
-    navigation() {
-        return api.get('/api/v1/admin/navigation').then((response) => response.data.data);
+    navigation({ force = false } = {}) {
+        if (!force && navigationCached) {
+            return Promise.resolve(navigationCached);
+        }
+
+        if (!force && navigationPending) {
+            return navigationPending;
+        }
+
+        navigationPending = api.get('/api/v1/admin/navigation')
+            .then((response) => {
+                navigationCached = response.data.data;
+
+                return navigationCached;
+            })
+            .finally(() => {
+                navigationPending = null;
+            });
+
+        return navigationPending;
+    },
+
+    clearNavigation() {
+        navigationCached = null;
+        navigationPending = null;
     },
 
     dashboard(params) {
@@ -27,7 +53,7 @@ export const adminApi = {
         });
         const disposition = response.headers['content-disposition'] || '';
         const match = disposition.match(/filename="?([^"]+)"?/i);
-        const filename = match?.[1] || `cinemoto-report-${Date.now()}.csv`;
+        const filename = match?.[1] || `cinemoto-report-${Date.now()}.xlsx`;
         const url = window.URL.createObjectURL(response.data);
         const anchor = document.createElement('a');
         anchor.href = url;

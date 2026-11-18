@@ -97,10 +97,25 @@ export default function AdminTable({
                     </tbody>
                 </table>
             </div>
-            {listing && listing.last_page > 1 && (
-                <div className="flex items-center justify-between px-4 py-3 text-sm text-gray-600">
-                    <span>{listing.from}–{listing.to} of {listing.total}</span>
-                    <div className="flex gap-2">
+            {listing && (
+                <div className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 text-sm text-gray-600">
+                    <span>
+                        {listing.total > 0 ? `${listing.from}–${listing.to} of ${listing.total}` : `0 of ${listing.total}`}
+                    </span>
+                    <div className="flex flex-wrap items-center gap-2">
+                        <label className="flex items-center gap-2">
+                            <span className="text-gray-500">Rows</span>
+                            <select
+                                aria-label="Rows per page"
+                                className="h-9 rounded-lg border border-gray-300 bg-white px-2 text-sm text-[#1A2130]"
+                                value={String(query.per_page || listing.per_page || 10)}
+                                onChange={(event) => onQuery({ ...query, per_page: Number(event.target.value), page: 1 })}
+                            >
+                                {[10, 30, 60, 80, 100].map((size) => (
+                                    <option key={size} value={size}>{size}</option>
+                                ))}
+                            </select>
+                        </label>
                         <button type="button" className="rounded-lg border px-3 py-1 disabled:opacity-40" disabled={listing.current_page <= 1} onClick={() => onQuery({ ...query, page: listing.current_page - 1 })}>Previous</button>
                         <button type="button" className="rounded-lg border px-3 py-1 disabled:opacity-40" disabled={listing.current_page >= listing.last_page} onClick={() => onQuery({ ...query, page: listing.current_page + 1 })}>Next</button>
                     </div>

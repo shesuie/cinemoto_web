@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { MESSAGES } from '../../constants/messages';
 import { toast } from 'react-toastify';
 import { adminApi } from '../../api/admin';
 import ConfirmDialog from './ConfirmDialog';
@@ -235,7 +236,7 @@ export default function SeatLayoutEditor({ cinemas = [], screens = [], editor = 
             return;
         }
         if (stats.seats < 1) {
-            toast.error('The layout needs at least one seat before it can be saved.');
+            toast.error(MESSAGES.seatLayoutEmpty);
 
             return;
         }
@@ -262,11 +263,11 @@ export default function SeatLayoutEditor({ cinemas = [], screens = [], editor = 
                 screen_id: editor.screen_id,
                 layout: draft,
             });
-            toast.success('The seating layout was saved.');
+            toast.success(MESSAGES.seatLayoutSaved);
             setConfirm(null);
             onSaved?.();
         } catch (failure) {
-            toast.error(failure.message || 'The layout could not be saved.');
+            toast.error(failure.message || MESSAGES.seatLayoutSaveFailed);
         } finally {
             setSaving(false);
         }

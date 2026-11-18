@@ -1,13 +1,15 @@
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import CustomerFooter from '../components/CustomerFooter';
-import HeaderMovieSearch from '../components/HeaderMovieSearch';
+import BrandMark from '../components/ui/BrandMark';
+import CustomerFooter from '../components/ui/CustomerFooter';
+import MovieSearchBar from '../components/catalog/MovieSearchBar';
+import useSiteBranding from '../hooks/useSiteBranding';
 import { useAuthStore } from '../stores/authStore';
 import { loginPath } from '../utils/authRedirect';
-import { mediaUrl } from '../utils/format';
 
 export default function CustomerLayout({ children, flush = false }) {
     const navigate = useNavigate();
     const location = useLocation();
+    const branding = useSiteBranding();
     const user = useAuthStore((state) => state.user);
     const logout = useAuthStore((state) => state.logout);
     const customer = user?.roles?.includes('customer');
@@ -21,28 +23,22 @@ export default function CustomerLayout({ children, flush = false }) {
     return (
         <div className="flex min-h-screen flex-col bg-navy text-mist">
             <header className="sticky top-0 z-30 border-b border-white/10 bg-ink/95 backdrop-blur">
-                <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-4 gap-y-3 px-4 py-4">
-                    <Link to="/" className="flex items-center gap-3 focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">
-                        <img
-                            src={mediaUrl('/images/film-reel.png')}
-                            alt=""
-                            className="h-9 w-9"
-                            onError={(event) => {
-                                event.currentTarget.style.display = 'none';
-                            }}
+                <div className="mx-auto grid max-w-6xl grid-cols-[1fr_auto_1fr] items-center gap-x-4 gap-y-3 px-4 py-4">
+                    <Link to="/" className="justify-self-start focus:outline-none focus-visible:ring-2 focus-visible:ring-brand">
+                        <BrandMark
+                            name={branding.name}
+                            font={branding.font}
+                            logoUrl={branding.logo_url}
                         />
-                        <span className="text-lg font-semibold tracking-[0.14em] sm:text-xl">
-                            CINE<span className="text-brand">MO&apos;TO</span>
-                        </span>
                     </Link>
-                    <nav className="flex flex-wrap items-center gap-4 text-sm font-medium text-white/75">
+                    <nav className="flex flex-wrap items-center justify-center gap-4 justify-self-center text-sm font-medium text-white/75">
                         <Link to="/" className="transition hover:text-brand">Movies</Link>
                         {customer && <Link to="/tickets" className="transition hover:text-brand">My Tickets</Link>}
                         {user?.staff && <Link to="/admin/dashboard" className="transition hover:text-brand">Admin</Link>}
                         {user && <Link to="/account" className="transition hover:text-brand">Account</Link>}
                     </nav>
-                    <div className="ml-auto flex w-full flex-wrap items-center justify-end gap-3 sm:w-auto">
-                        <HeaderMovieSearch />
+                    <div className="flex flex-wrap items-center justify-end gap-3 justify-self-end">
+                        <MovieSearchBar />
                         {user ? (
                             <button type="button" className="cinema-button !py-2" onClick={signOut}>
                                 Sign out

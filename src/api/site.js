@@ -16,13 +16,11 @@ export const siteApi = {
         pending = api.get('/api/v1/site')
             .then((response) => {
                 cached = response.data.data;
-                pending = null;
 
                 return cached;
             })
-            .catch((error) => {
+            .finally(() => {
                 pending = null;
-                throw error;
             });
 
         return pending;

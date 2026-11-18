@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { MESSAGES } from '../../constants/messages';
 import { Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { adminApi } from '../../api/admin';
@@ -20,7 +21,7 @@ export default function RolesPage() {
             setPending(null);
             listing.load();
         } catch (failure) {
-            toast.error(failure.message || 'The role could not be removed.');
+            toast.error(failure.message || MESSAGES.roleRemoveFailed);
         } finally {
             setBusy(false);
         }
@@ -30,7 +31,7 @@ export default function RolesPage() {
         <AdminLayout header="Roles">
             <AdminTable
                 title="Roles and permissions"
-                description="Super Admin and Customer stay in place. A role can be removed only when no account uses it."
+                description="Customer is the default public-site role and is not listed here. Super Admin stays in place. A role can be removed only when no account uses it."
                 listing={listing.payload?.listing}
                 query={listing.query}
                 onQuery={listing.setQuery}
